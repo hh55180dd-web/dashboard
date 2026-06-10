@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Header -->
+<div class="soft-card overflow-hidden mb-8 animate-[fadeIn_0.3s_ease]">
+    <div class="bg-gradient-to-l from-brand-dark to-[#0c3b40] p-8 text-white relative">
+        <i class="fa-solid fa-id-card absolute left-10 top-1/2 -translate-y-1/2 text-8xl text-brand-gold opacity-10"></i>
+        
+        <div class="flex items-center gap-6 relative z-10">
+            <div class="w-24 h-24 rounded-2xl bg-brand-gold/20 border-2 border-brand-gold flex items-center justify-center text-4xl text-brand-gold shrink-0 shadow-lg">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div>
+                <p class="text-brand-gold font-bold mb-1 flex items-center gap-2">
+                    <a href="{% url 'dashboard' %}" class="hover:text-white transition"><i class="fa-solid fa-arrow-right"></i> عودة للوحة</a>
+                    <span>|</span> ملف الموظف
+                </p>
+                <h1 class="text-3xl font-black">{{ employee.name }}</h1>
+                <p class="text-gray-300 mt-2 text-sm"><i class="fa-solid fa-envelope text-brand-gold ml-1"></i> {{ employee.user.username }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- KPI Bar -->
+    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 bg-white">
+        <div class="p-6 text-center">
+            <p class="text-gray-500 text-sm font-bold mb-1">متوسط الأداء العام</p>
+            <h3 class="text-3xl font-black {% if avg_overall >= 80 %}text-emerald-600{% elif avg_overall >= 60 %}text-blue-600{% else %}text-red-600{% endif %}">{{ avg_overall }}%</h3>
+        </div>
+        <div class="p-6 text-center">
+            <p class="text-gray-500 text-sm font-bold mb-1">إجمالي الإنذارات</p>
+            <h3 class="text-3xl font-black {% if total_warnings >= 3 %}text-red-600{% elif total_warnings > 0 %}text-amber-500{% else %}text-emerald-600{% endif %}">{{ total_warnings }}</h3>
+        </div>
+        <div class="p-6 text-center">
+            <p class="text-gray-500 text-sm font-bold mb-1">أيام العمل المسجلة</p>
+            <h3 class="text-3xl font-black text-brand-dark">{{ total_days }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    
+    <!-- منحنى الأداء الزمني (Line Chart) -->
+    <div class="soft-card p-6 lg:col-span-2">
+        <h3 class="text-xl font-black text-brand-dark mb-6 border-b border-gray-100 pb-4">
+            <i class="fa-solid fa-chart-area text-brand-gold ml-2"></i> منحنى الأداء الزمني (آخر 30 يوم)
+        </h3>
+        <canvas id="historyChart" height="120"></canvas>
+    </div>
+
+    <!-- سجل الإنذارات -->
+    <div class="soft-card p-6">
+        <h3 class="text-xl font-black text-red-600 mb-6 border-b border-gray-100 pb-4">
+            <i class="fa-solid fa-triangle-exclamation ml-2"></i> سجل الإنذارات
+        </h3>
+        
+        <div class="space-y-4">
+            {% for warning in warnings %}
+            <div class="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-4 items-start">
+                <div class="w-10 h-10 rounded-full bg-red-200 text-red-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <p class="font-black text-red-800">{{ warning.date|date:"Y-m-d" }}</p>
+                    <p class="text-xs text-red-600 mt-1 font-bold">انخفاض الأداء عن الحد الأدنى المقبول.</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-emerald-600">
+                <i class="fa-solid fa-shield-check text-5xl mb-3 opacity-50"></i>
+                <p class="font-black">سجل نظيف! لا توجد إنذارات.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- السجل اليومي الكامل -->
+<div class="soft-card p-6">
+    <h3 class="text-xl font-black text-brand-dark mb-6 border-b border-gray-100 pb-4">
+        <i class="fa-solid fa-table-list text-brand-gold ml-2"></i> السجل اليومي المفصل
+    </h3>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-center">
+            <thead class="bg-gray-50 text-gray-500 font-black">
+                <tr>
+                    <th class="py-4 px-4 text-right">التاريخ</th>
+                    
+                    <!-- 🎛️ رسم عناوين الأعمدة ديناميكياً حسب مهام الموظف -->
+                    {% for task in employee_tasks %}
+                    <th class="py-4 px-4">{{ task.name }} ({{ task.daily_target }})</th>
+                    {% endfor %}
+                    
+                    <th class="py-4 px-4">نسبة الإنجاز</th>
+                    <th class="py-4 px-4">الحالة</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                
+                {% for perf in perf_data_list %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="py-4 px-4 font-bold text-right text-brand-dark">{{ perf.date|date:"Y-m-d" }}</td>
+                    
+                    <!-- 📊 رسم الأرقام ديناميكياً لكل مهمة -->
+                    {% for tq in perf.task_quantities %}
+                    <td class="py-4 px-4 font-bold {% if tq.is_low %}text-red-500{% else %}text-emerald-600{% endif %}">
+                        {{ tq.qty }}
+                    </td>
+                    {% endfor %}
+                    
+                    <td class="py-4 px-4 font-black text-brand-dark" dir="ltr">{{ perf.overall_percentage }}%</td>
+                    <td class="py-4 px-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold 
+                            {% if perf.status == 'ممتاز' %}bg-emerald-100 text-emerald-700
+                            {% elif perf.status == 'جيد' %}bg-blue-100 text-blue-700
+                            {% elif perf.status == 'Warning' %}bg-amber-100 text-amber-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ perf.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="100%" class="py-8 text-center text-gray-400 font-bold">لا توجد سجلات يومية حتى الآن.</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const dates = JSON.parse('{{ chart_dates|safe }}');
+    const scores = JSON.parse('{{ chart_scores|safe }}');
+
+    Chart.defaults.font.family = "'Tajawal', sans-serif";
+    
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    
+    // تأثير التدرج اللوني تحت الخط
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(152, 133, 97, 0.5)'); // brand-gold
+    gradient.addColorStop(1, 'rgba(152, 133, 97, 0.0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'نسبة الإنجاز %',
+                data: scores,
+                borderColor: '#988561',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                pointBackgroundColor: '#052326',
+                pointBorderColor: '#988561',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4 // لجعل الخط منحني وناعم
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: '#f3f4f6' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="min-h-[75vh] flex items-center justify-center">
+
+    <div class="w-full max-w-6xl grid lg:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl">
+
+        <!-- Side Branding -->
+
+        <div class="hidden lg:flex relative bg-gradient-to-br from-brand-dark via-[#0c3b40] to-brand-dark p-12 text-white overflow-hidden">
+
+            <div class="absolute top-0 left-0 w-full h-full">
+
+                <div class="absolute top-10 left-10 w-72 h-72 rounded-full bg-brand-gold/10 blur-3xl"></div>
+
+                <div class="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-brand-gold/10 blur-3xl"></div>
+
+            </div>
+
+            <div class="relative z-10 flex flex-col justify-center">
+
+                <div class="mb-8">
+
+                    <div class="w-20 h-20 rounded-3xl bg-brand-gold/20 flex items-center justify-center mb-6">
+
+                        <i class="fa-solid fa-shield-halved text-4xl text-brand-gold"></i>
+
+                    </div>
+
+                    <h1 class="text-5xl font-black leading-tight mb-4">
+
+                        نظام تقييم الأداء
+
+                    </h1>
+
+                    <p class="text-gray-300 text-lg leading-8">
+
+                        منصة موحدة لمتابعة الإنجازات اليومية وإدارة الأداء والإنذارات وتحليل نتائج الفرق.
+
+                    </p>
+
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+
+                        <i class="fa-solid fa-chart-line text-brand-gold text-xl mb-3"></i>
+
+                        <p class="text-sm">
+                            متابعة الأداء
+                        </p>
+
+                    </div>
+
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+
+                        <i class="fa-solid fa-users text-brand-gold text-xl mb-3"></i>
+
+                        <p class="text-sm">
+                            إدارة الفرق
+                        </p>
+
+                    </div>
+
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+
+                        <i class="fa-solid fa-award text-brand-gold text-xl mb-3"></i>
+
+                        <p class="text-sm">
+                            قياس الإنجاز
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Login Form -->
+
+        <div class="bg-white p-8 lg:p-14">
+
+            <div class="max-w-md mx-auto">
+
+                <div class="text-center mb-10">
+
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-brand-gold/10 mb-5">
+
+                        <i class="fa-solid fa-fingerprint text-4xl text-brand-gold"></i>
+
+                    </div>
+
+                    <h2 class="text-4xl font-black text-brand-dark mb-3">
+
+                        تسجيل الدخول
+
+                    </h2>
+
+                    <p class="text-slate-500">
+
+                        أدخل بيانات حسابك للوصول إلى النظام
+
+                    </p>
+
+                </div>
+
+                <form method="POST" class="space-y-6">
+
+                    {% csrf_token %}
+
+                    <div>
+
+                        <label class="block text-sm font-black text-brand-dark mb-3">
+
+                            اسم المستخدم
+
+                        </label>
+
+                        <div class="relative">
+
+                            <i class="fa-solid fa-user absolute right-5 top-1/2 -translate-y-1/2 text-brand-gold"></i>
+
+                            <input
+                                type="text"
+                                name="username"
+                                required
+                                class="w-full h-14 pr-14 pl-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none transition-all font-bold">
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <label class="block text-sm font-black text-brand-dark mb-3">
+
+                            كلمة المرور
+
+                        </label>
+
+                        <div class="relative">
+
+                            <i class="fa-solid fa-lock absolute right-5 top-1/2 -translate-y-1/2 text-brand-gold"></i>
+
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                class="w-full h-14 pr-14 pl-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-brand-gold focus:ring-4 focus:ring-brand-gold/10 outline-none transition-all font-bold">
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+
+                        <label class="flex items-center gap-2 cursor-pointer">
+
+                            <input type="checkbox" class="rounded">
+
+                            <span class="text-gray-600">
+                                تذكرني
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full h-14 rounded-2xl bg-gradient-to-r from-brand-dark to-[#0c3b40]
+                               text-white font-black text-lg
+                               hover:shadow-xl hover:-translate-y-1
+                               transition-all duration-300">
+
+                        <i class="fa-solid fa-arrow-left-long ml-2"></i>
+
+                        دخول إلى النظام
+
+                    </button>
+
+                </form>
+
+                <div class="mt-10 text-center">
+
+                    <div class="inline-flex items-center gap-2 text-sm text-gray-400">
+
+                        <i class="fa-solid fa-shield-check"></i>
+
+                        <span>
+
+                            اتصال آمن ومشفر
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto h-[80vh] flex flex-col soft-card overflow-hidden border border-brand-light">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-l from-brand-dark to-[#0c3b40] p-6 text-white flex items-center gap-4 shadow-md z-10">
+        <div class="w-12 h-12 rounded-full bg-brand-gold/20 border border-brand-gold flex items-center justify-center text-2xl text-brand-gold animate-pulse">
+            <i class="fa-solid fa-robot"></i>
+        </div>
+        <div>
+            <h2 class="text-xl font-black">المستشار الإداري الذكي (AI)</h2>
+            <p class="text-brand-gold text-xs font-bold mt-1">مدعوم ببيانات القسم الحية عبر Groq</p>
+        </div>
+    </div>
+
+    <!-- Chat Box -->
+    <div id="chat-box" class="flex-grow bg-gray-50 p-6 overflow-y-auto flex flex-col gap-4 scroll-smooth">
+        
+        <!-- رسالة ترحيبية من النظام -->
+        <div class="flex gap-4 w-full md:w-3/4">
+            <div class="w-10 h-10 rounded-full bg-brand-dark text-brand-gold flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 text-brand-dark font-bold text-sm leading-relaxed">
+                أهلاً بك أيها المدير. أنا مساعدك الذكي. لقد قمت للتو بقراءة أحدث بيانات الموظفين (متوسط الأداء والإنذارات). 
+                <br><br>
+                يمكنك سؤالي مثلاً:<br>
+                <span class="text-brand-gold">"قارن بين ابو عبيدة و ابو كامل"</span> أو <span class="text-brand-gold">"من هو أسوأ موظف وماذا أقول له؟"</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Input Area -->
+    <div class="bg-white p-4 border-t border-gray-200">
+        <form id="chat-form" class="flex gap-3 relative">
+            {% csrf_token %}
+            <input type="text" id="user-input" placeholder="اسأل المستشار الذكي عن أداء فريقك..." 
+                   class="flex-grow bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 focus:outline-none focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 font-bold text-brand-dark transition-all" required autocomplete="off">
+            
+            <button type="submit" id="send-btn" class="bg-brand-dark hover:bg-[#0c3b40] text-brand-gold px-8 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                <span>إرسال</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // دالة لإضافة رسالة للشاشة
+    function appendMessage(sender, text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex gap-4 w-full md:w-3/4 ${sender === 'user' ? 'mr-auto flex-row-reverse' : ''}`;
+        
+        let avatar = sender === 'user' 
+            ? `<div class="w-10 h-10 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center shrink-0"><i class="fa-solid fa-user-tie"></i></div>`
+            : `<div class="w-10 h-10 rounded-full bg-brand-dark text-brand-gold flex items-center justify-center shrink-0"><i class="fa-solid fa-robot"></i></div>`;
+            
+        let bubbleClass = sender === 'user'
+            ? `bg-brand-gold text-brand-dark p-4 rounded-2xl rounded-tl-none shadow-sm font-bold text-sm leading-relaxed`
+            : `bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 text-brand-dark font-bold text-sm leading-relaxed whitespace-pre-wrap`;
+
+        msgDiv.innerHTML = `
+            ${avatar}
+            <div class="${bubbleClass}">${text}</div>
+        `;
+        
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // النزول لأسفل الشات
+    }
+
+    // دالة إضافة مؤشر التحميل (Typing...)
+    function showLoading() {
+        const loadingId = 'loading-' + Date.now();
+        const msgDiv = document.createElement('div');
+        msgDiv.id = loadingId;
+        msgDiv.className = `flex gap-4 w-full md:w-3/4`;
+        msgDiv.innerHTML = `
+            <div class="w-10 h-10 rounded-full bg-brand-dark text-brand-gold flex items-center justify-center shrink-0"><i class="fa-solid fa-robot"></i></div>
+            <div class="bg-white p-4 rounded-2xl rounded-tr-none shadow-sm border border-gray-100 flex gap-1 items-center">
+                <div class="w-2 h-2 bg-brand-gold rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-brand-gold rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-brand-gold rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+            </div>
+        `;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return loadingId;
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // 1. عرض رسالة المستخدم
+        appendMessage('user', message);
+        userInput.value = '';
+        sendBtn.disabled = true;
+        
+        // 2. عرض مؤشر التحميل
+        const loadingId = showLoading();
+
+        // 3. إرسال الطلب للباك-إند
+        try {
+            const response = await fetch('{% url "ai_chat_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            
+            // إزالة مؤشر التحميل
+            document.getElementById(loadingId).remove();
+
+            if (response.ok) {
+                appendMessage('ai', data.response);
+            } else {
+                appendMessage('ai', 'عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' + data.error);
+            }
+        } catch (error) {
+            document.getElementById(loadingId).remove();
+            appendMessage('ai', 'عذراً، حدث خطأ في الاتصال بالخادم.');
+        } finally {
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+    });
+</script>
+{% endblock %}

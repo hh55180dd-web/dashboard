@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="soft-card overflow-hidden">
+
+    <!-- HEADER -->
+
+    <div class="bg-gradient-to-l from-brand-dark to-[#0c3b40] px-6 py-6 text-white">
+
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+            <div>
+
+                <p class="text-brand-gold font-bold text-sm mb-2">
+                    تقرير إداري متقدم
+                </p>
+
+                <h1 class="text-2xl lg:text-3xl font-black">
+                    التقرير الشامل لأداء القسم
+                </h1>
+
+                <p class="text-gray-300 text-sm mt-2">
+                    تحليل تلقائي للأداء + توصيات مبنية على البيانات
+                </p>
+
+            </div>
+
+            <div class="flex gap-3">
+
+                <div class="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl text-center">
+
+                    <p class="text-xs text-gray-300">
+                        إجمالي الموظفين
+                    </p>
+
+                    <p class="text-xl font-black text-white">
+                        {{ report_data|length }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TABLE WRAPPER -->
+
+    <div class="overflow-x-auto">
+
+        <table class="w-full text-sm">
+
+            <!-- HEADER -->
+
+            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
+
+                <tr class="text-gray-500 text-xs uppercase tracking-wider">
+
+                    <th class="px-6 py-4 text-right font-black">
+                        الموظف
+                    </th>
+
+                    <th class="px-6 py-4 text-center font-black">
+                        متوسط الأداء
+                    </th>
+
+                    <th class="px-6 py-4 text-center font-black text-emerald-600">
+                        أيام النجاح
+                    </th>
+
+                    <th class="px-6 py-4 text-center font-black text-red-500">
+                        أيام الإخفاق
+                    </th>
+
+                    <th class="px-6 py-4 text-center font-black text-amber-500">
+                        الإنذارات
+                    </th>
+
+                    <th class="px-6 py-4 text-right font-black">
+                        التوصية الإدارية
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <!-- BODY -->
+
+            <tbody class="divide-y divide-gray-100">
+
+                {% for row in report_data %}
+
+                <tr class="hover:bg-gray-50 transition">
+
+                    <!-- Employee -->
+
+                    <td class="px-6 py-4">
+
+                        <div class="flex items-center gap-3">
+
+                            <div class="w-10 h-10 rounded-xl bg-brand-dark text-white flex items-center justify-center">
+
+                                <i class="fa-solid fa-user"></i>
+
+                            </div>
+
+                            <div class="font-black text-brand-dark">
+
+                                <a href="{% url 'employee_profile' row.id %}" class="hover:text-brand-gold transition underline decoration-brand-gold/30 underline-offset-4">
+                                    {{ row.name }}
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                    <!-- Performance -->
+
+                    <td class="px-6 py-4 text-center">
+
+                        <div class="flex flex-col items-center gap-2">
+
+                            <div class="w-full max-w-[120px] bg-gray-100 h-2 rounded-full overflow-hidden">
+
+                                <div class="
+                                    h-full rounded-full
+                                    {% if row.avg_performance >= 80 %}
+                                        bg-emerald-500
+                                    {% elif row.avg_performance >= 60 %}
+                                        bg-blue-500
+                                    {% else %}
+                                        bg-red-500
+                                    {% endif %}
+                                " style="width: {{ row.avg_performance }}%"></div>
+
+                            </div>
+
+                            <span class="font-black text-sm">
+
+                                {{ row.avg_performance }}%
+
+                            </span>
+
+                        </div>
+
+                    </td>
+
+                    <!-- Success days -->
+
+                    <td class="px-6 py-4 text-center font-bold text-emerald-600">
+
+                        {{ row.normal_days }}
+
+                    </td>
+
+                    <!-- Failure days -->
+
+                    <td class="px-6 py-4 text-center font-bold text-red-500">
+
+                        {{ row.low_days }}
+
+                    </td>
+
+                    <!-- Warnings -->
+
+                    <td class="px-6 py-4 text-center">
+
+                        <div class="inline-flex items-center justify-center w-9 h-9 rounded-full font-black
+                            {% if row.warnings >= 4 %}
+                                bg-red-100 text-red-700
+                            {% elif row.warnings >= 2 %}
+                                bg-amber-100 text-amber-700
+                            {% else %}
+                                bg-gray-100 text-gray-600
+                            {% endif %}
+                        ">
+
+                            {{ row.warnings }}
+
+                        </div>
+
+                    </td>
+
+                    <!-- Recommendation -->
+
+                    <td class="px-6 py-4">
+                        {% if 'ممتاز' in row.recommendation %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                <i class="fa-solid fa-star"></i> {{ row.recommendation }}
+                            </span>
+                        {% elif 'جيد' in row.recommendation %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                <i class="fa-solid fa-thumbs-up"></i> {{ row.recommendation }}
+                            </span>
+                        {% elif 'Warning' in row.recommendation %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ row.recommendation }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                                <i class="fa-solid fa-skull-crossbones"></i> {{ row.recommendation }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
+    <div class="soft-card overflow-hidden mb-8 animate-[fadeIn_0.3s_ease]">
+        <div class="bg-gradient-to-l from-brand-dark to-[#0c3b40] p-8 text-white relative">
+            <i class="fa-solid fa-gamepad absolute left-10 top-1/2 -translate-y-1/2 text-8xl text-brand-gold opacity-10"></i>
+            
+            <div class="flex items-center justify-between flex-wrap gap-4 relative z-10">
+                <div>
+                    <p class="text-brand-gold font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> نظام النقاط والإنجاز
+                    </p>
+                    <h1 class="text-3xl font-black">سجل المهام اليومية</h1>
+                    <p class="text-gray-300 mt-2 text-sm">
+                        قم بإدخال إنجازاتك بدقة. سيتم احتساب نقاطك وتقييمك تلقائياً بناءً على المهام الموكلة إليك.
+                    </p>
+                </div>
+                <div class="text-5xl text-brand-gold bg-white/10 p-4 rounded-2xl border border-brand-gold/30 backdrop-blur-sm">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- حلقة تكرار لرسم بطاقة لكل مهمة ديناميكياً -->
+            {% for field in form %}
+            <div class="soft-card bg-white border border-brand-light rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                
+                <!-- شريط علوي للزينة -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-brand-gold transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+
+                <div class="flex items-center justify-between mb-5">
+                    <!-- أيقونة المهمة -->
+                    <div class="w-14 h-14 rounded-2xl bg-brand-dark text-brand-gold flex items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-crosshairs text-2xl"></i>
+                    </div>
+                    
+                    <!-- شارة النقاط (Gamification) -->
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs font-black bg-brand-gold text-brand-dark px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-bolt"></i> {{ field.field.task_obj.points }} نقاط
+                        </span>
+                        {% if not field.field.task_obj.is_global %}
+                        <span class="text-[10px] font-bold text-gray-400 mt-1"><i class="fa-solid fa-lock"></i> مهمة مخصصة لك</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- اسم المهمة -->
+                <h3 class="font-black text-lg text-brand-dark mb-4 leading-tight h-12">
+                    {{ field.label }}
+                </h3>
+
+                <!-- حقل الإدخال -->
+                <div class="relative">
+                    {{ field }}
+                </div>
+
+                <!-- الهدف اليومي -->
+                <div class="mt-4 flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span class="text-gray-500 font-bold">الهدف المطلوب:</span>
+                    <span class="text-brand-dark font-black bg-white px-2 py-0.5 rounded shadow-sm border border-gray-200">
+                        {{ field.field.task_obj.daily_target }}
+                    </span>
+                </div>
+
+                <!-- عرض الأخطاء إن وجدت -->
+                {% if field.errors %}
+                <div class="mt-2 text-xs text-red-500 font-bold">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- Summary & Submit -->
+        <div class="soft-card p-6 bg-white border border-brand-light">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                
+                <div class="flex items-start gap-3 w-full md:w-2/3">
+                    <i class="fa-solid fa-circle-info text-brand-gold text-2xl mt-1"></i>
+                    <div>
+                        <h4 class="font-black text-brand-dark mb-1">ملاحظات التقييم</h4>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            تأكد من إدخال الأرقام الفعلية. سيقوم النظام بضرب إنجازك في عدد نقاط كل مهمة لاستخراج <strong class="text-brand-dark">مؤشر أدائك العام</strong>. المهام المخصصة لك لها تأثير مباشر على تقييمك النهائي.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-1/3">
+                    <button type="submit" class="w-full bg-gradient-to-l from-brand-dark to-[#0c3b40] text-brand-gold py-4 rounded-xl font-black text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-check-double"></i>
+                        اعتماد التقرير اليومي
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+/* تحسين شكل حقول الإدخال الرقمية لإخفاء الأسهم الجانبية الافتراضية */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+{% endblock %}
